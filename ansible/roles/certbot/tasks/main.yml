@@ -21,3 +21,19 @@
     owner: root
     group: root
     state: link
+
+- name: Request certificates
+  become: true
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/certbot
+      - certonly
+      - --cert-name
+      - ctftest1.zetatwo.dev
+      - --standalone
+      - --non-interactive
+      - --agree-tos
+      - -m
+      - webmaster@example.com
+      - --domains
+      - chall1.ctftest1.zetatwo.dev,chall2.ctftest1.zetatwo.dev

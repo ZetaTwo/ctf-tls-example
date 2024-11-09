@@ -12,4 +12,7 @@ fmt:
 apply:
 	terraform apply -var-file="secret.tfvars"
 
+destroy:
+	terraform destroy -var-file="secret.tfvars"
+
 .PHONY: default init plan fmt apply

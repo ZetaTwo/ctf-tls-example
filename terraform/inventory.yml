@@ -1,4 +1,7 @@
 "hosts":
   "hosts":
-    "challenges.ctftest1.zetatwo.dev.":
+    "challenges":
       "ansible_host": "challenges"
+      "domains":
+      - "chall1.ctftest1.zetatwo.dev."
+      - "chall2.ctftest1.zetatwo.dev."

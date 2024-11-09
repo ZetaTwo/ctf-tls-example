@@ -78,7 +78,7 @@ resource "google_dns_managed_zone" "ctftest1" {
 
 resource "google_dns_record_set" "challenges" {
   provider = google-beta
-  name     = "${google_compute_instance.challenges.name}.${google_dns_managed_zone.ctftest1.dns_name}"
+  name     = "${google_dns_managed_zone.ctftest1.dns_name}"
   type     = "A"
   ttl      = 300
 
@@ -87,48 +87,53 @@ resource "google_dns_record_set" "challenges" {
   rrdatas = [google_compute_instance.challenges.network_interface[0].access_config[0].nat_ip]
 }
 
-resource "cloudflare_dns_record" "ctftest1-ns1" {
-  zone_id = var.cloudflare_zone_id
-  name    = "ctftest1.zetatwo.dev"
-  content = "ns-cloud-c1.googledomains.com."
-  type    = "NS"
-  ttl     = 1
+resource "google_dns_record_set" "chall1" {
+  provider = google-beta
+  name     = "chall1.${google_dns_record_set.challenges.name}"
+  type     = "A"
+  ttl      = 300
+
+  managed_zone = google_dns_managed_zone.ctftest1.name
+
+  rrdatas = [google_compute_instance.challenges.network_interface[0].access_config[0].nat_ip]
 }
 
-resource "cloudflare_dns_record" "ctftest1-ns2" {
-  zone_id = var.cloudflare_zone_id
-  name    = "ctftest1.zetatwo.dev"
-  content = "ns-cloud-c2.googledomains.com."
-  type    = "NS"
-  ttl     = 1
+resource "google_dns_record_set" "chall2" {
+  provider = google-beta
+  name     = "chall2.${google_dns_record_set.challenges.name}"
+  type     = "A"
+  ttl      = 300
+
+  managed_zone = google_dns_managed_zone.ctftest1.name
+
+  rrdatas = [google_compute_instance.challenges.network_interface[0].access_config[0].nat_ip]
 }
 
-resource "cloudflare_dns_record" "ctftest1-ns3" {
+resource "cloudflare_dns_record" "ctftest1-ns" {
+  for_each = toset(google_dns_managed_zone.ctftest1.name_servers)
   zone_id = var.cloudflare_zone_id
-  name    = "ctftest1.zetatwo.dev"
-  content = "ns-cloud-c3.googledomains.com."
-  type    = "NS"
-  ttl     = 1
-}
-
-resource "cloudflare_dns_record" "ctftest1-ns4" {
-  zone_id = var.cloudflare_zone_id
-  name    = "ctftest1.zetatwo.dev"
-  content = "ns-cloud-c4.googledomains.com."
+  name    = google_dns_managed_zone.ctftest1.name
+  content = each.value
   type    = "NS"
   ttl     = 1
 }
 
 locals {
   hosts = [
-    {"hostname": google_compute_instance.challenges.name, "dns": google_dns_record_set.challenges.name}
+    {
+      "hostname": google_compute_instance.challenges.name,
+      "domains": [
+        google_dns_record_set.chall1.name,
+        google_dns_record_set.chall2.name
+      ]
+    }
   ]
 }
 
 resource "local_file" "ansible_inventory" {
   filename = "inventory.yml"
   content = yamlencode({
-    "hosts" : { "hosts" : { for host in local.hosts : "${host.dns}" => {"ansible_host": host.hostname} } }
+    "hosts" : { "hosts" : { for host in local.hosts : "${host.hostname}" => {"ansible_host": host.hostname, "domains": host.domains} } }
   })
   file_permission = "644"
 }
@@ -147,6 +152,19 @@ resource "google_compute_firewall" "firewall_iap_ssh" {
 
   allow {
     protocol = "tcp"
-    ports    = ["22"] # 22 = SSH
+    ports    = ["22"] # SSH
+  }
+}
+
+resource "google_compute_firewall" "firewall_http_https" {
+  name     = "allow-http-https"
+  provider = google-beta
+  network  = google_compute_network.ctftest.name
+  
+  source_ranges = ["0.0.0.0/0"]
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "443"] # HTTP, HTTPS
   }
 }

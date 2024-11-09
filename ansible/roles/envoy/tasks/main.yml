@@ -47,8 +47,8 @@
 - name: Copy envoy configuration
   become: true
   ansible.builtin.copy:
-    src: envoy-demo.yml
-    dest: /etc/envoy/envoy-demo.yml
+    src: envoy.yml
+    dest: /etc/envoy/envoy.yml
     owner: root
     group: root
     mode: '0644'

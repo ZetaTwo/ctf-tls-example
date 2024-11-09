@@ -9,3 +9,5 @@
     role: envoy
   - name: Install Docker
     role: docker
+  - name: Start challenges
+    role: challenges

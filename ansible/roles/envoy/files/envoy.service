@@ -4,18 +4,26 @@ After=network-online.target
 Wants=network-online.target systemd-networkd-wait-online.service
 
 [Service]
-ExecStart=/usr/bin/envoy --config-path /etc/envoy/envoy-demo.yml
+LoadCredential=fullchain:/etc/letsencrypt/live/ctftest1.zetatwo.dev/fullchain.pem
+LoadCredential=privkey:/etc/letsencrypt/live/ctftest1.zetatwo.dev/privkey.pem
+ExecStartPre=/usr/bin/cp %d/fullchain /run/envoy/fullchain.pem
+ExecStartPre=/usr/bin/cp %d/privkey /run/envoy/privkey.pem
+
+ExecStart=/usr/bin/envoy --config-path /etc/envoy/envoy.yml
 ExecReload=/usr/bin/kill -USR1 $MAINPID
 Type=exec
 Restart=always
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+RuntimeDirectory=envoy
+LogsDirectory=envoy
 DynamicUser=yes
 PrivateDevices=yes
 PrivateIPC=yes
 PrivateTmp=yes
+RemoveIPC=yes
 ProtectSystem=strict
 ProtectHome=read-only
-RemoveIPC=yes
-LogsDirectory=envoy
 
 [Install]
 WantedBy=default.target

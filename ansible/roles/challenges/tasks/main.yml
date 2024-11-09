@@ -1,0 +1,30 @@
+- name: Pull challenge 1 image
+  become: true
+  community.docker.docker_image:
+    name: localhost:5001/ctftest_web_challenge:latest
+    source: pull
+
+- name: Start challenge 1
+  become: true
+  community.docker.docker_container:
+    name: challenge1
+    image: localhost:5001/ctftest_web_challenge:latest
+    state: started
+    ports:
+      - "40001:80"
+
+- name: Pull challenge 2 image
+  become: true
+  community.docker.docker_image:
+    name: localhost:5001/ctftest_pwn_challenge:latest
+    source: pull
+
+- name: Start challenge 2
+  become: true
+  community.docker.docker_container:
+    name: challenge2
+    image: localhost:5001/ctftest_pwn_challenge:latest
+    state: started
+    privileged: true
+    ports:
+      - "40002:1337"

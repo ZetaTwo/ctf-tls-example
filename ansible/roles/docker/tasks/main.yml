@@ -33,4 +33,6 @@
     cache_valid_time: 3600
     state: present
     name:
-      - docker
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
