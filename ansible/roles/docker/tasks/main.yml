@@ -1,0 +1,36 @@
+- name: Get deb architecture
+  ansible.builtin.command:
+    cmd: 'dpkg --print-architecture'
+  register: deb_architecture
+  changed_when: false
+
+- name: Download envoy GPG key
+  become: true
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/debian/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Add Docker repository to sources.list.d
+  become: true
+  ansible.builtin.apt_repository:
+    repo: "deb [ arch={{ deb_architecture.stdout }} signed-by=/etc/apt/keyrings/docker.asc ] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+    update_cache: false
+    state: present
+  register: apt_source
+
+- name: Update apt cache
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+  when: apt_source.changed
+
+- name: Install Docker
+  become: true
+  ansible.builtin.apt:
+    cache_valid_time: 3600
+    state: present
+    name:
+      - docker

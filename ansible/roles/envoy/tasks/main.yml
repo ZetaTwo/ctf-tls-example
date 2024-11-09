@@ -1,0 +1,72 @@
+- name: Get deb architecture
+  ansible.builtin.command:
+    cmd: 'dpkg --print-architecture'
+  register: deb_architecture
+  changed_when: false
+
+- name: Download envoy GPG key
+  become: true
+  ansible.builtin.get_url:
+    url: "https://apt.envoyproxy.io/signing.key"
+    dest: /etc/apt/keyrings/envoy-keyring.asc
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Add envoy repository to sources.list.d
+  become: true
+  ansible.builtin.apt_repository:
+    repo: "deb [ arch={{ deb_architecture.stdout }} signed-by=/etc/apt/keyrings/envoy-keyring.asc ] https://apt.envoyproxy.io {{ ansible_distribution_release }} main"
+    update_cache: false
+    state: present
+  register: apt_source
+
+- name: Update apt cache
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+  when: apt_source.changed
+
+- name: Install envoy
+  become: true
+  ansible.builtin.apt:
+    cache_valid_time: 3600
+    state: present
+    name:
+      - envoy
+
+- name: Create envoy config directory
+  become: true
+  file: 
+    path: /etc/envoy
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Copy envoy configuration
+  become: true
+  ansible.builtin.copy:
+    src: envoy-demo.yml
+    dest: /etc/envoy/envoy-demo.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart envoy
+
+- name: Install envoy service definition
+  become: true
+  ansible.builtin.copy:
+    src: envoy.service
+    dest: /etc/systemd/system/envoy.service
+    owner: root
+    group: root
+    mode: '0644'
+  register: envoy_service
+
+- name: Reload systemd config
+  become: true
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: envoy_service.changed
+  notify: restart envoy

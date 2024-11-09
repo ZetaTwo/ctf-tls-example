@@ -1,0 +1,4 @@
+gcp_zone: europe-north1-a
+gcp_project: ctf-tls-text
+ansible_ssh_args: --tunnel-through-iap --zone={{ gcp_zone }} --no-user-output-enabled --quiet
+ansible_scp_extra_args: --tunnel-through-iap --zone={{ gcp_zone }} --quiet

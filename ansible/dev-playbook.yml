@@ -1,0 +1,11 @@
+---
+- name: Deploy 
+  hosts: all
+
+  roles:
+  # - name: Install certbot
+  #   role: certbot
+  - name: Install envoy
+    role: envoy
+  # - name: Install Docker
+  #   role: docker

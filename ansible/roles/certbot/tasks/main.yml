@@ -1,0 +1,23 @@
+- name: Install snapd
+  become: true
+  ansible.builtin.apt:
+    name: snapd
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install certbot
+  become: true
+  community.general.snap:
+    classic: true
+    name:
+      - certbot
+
+- name: Create a symbolic link for certbot
+  become: true
+  ansible.builtin.file:
+    src: /snap/bin/certbot
+    dest: /usr/bin/certbot
+    owner: root
+    group: root
+    state: link

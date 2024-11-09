@@ -1,0 +1,21 @@
+[Unit]
+Description=Envoy Proxy
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+ExecStart=/usr/bin/envoy --config-path /etc/envoy/envoy-demo.yml
+ExecReload=/usr/bin/kill -USR1 $MAINPID
+Type=exec
+Restart=always
+DynamicUser=yes
+PrivateDevices=yes
+PrivateIPC=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+RemoveIPC=yes
+LogsDirectory=envoy
+
+[Install]
+WantedBy=default.target

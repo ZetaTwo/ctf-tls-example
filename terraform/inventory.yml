@@ -1,0 +1,4 @@
+"hosts":
+  "hosts":
+    "challenges.ctftest1.zetatwo.dev.":
+      "ansible_host": "challenges"
